@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="Content-Style-Type" content="text/css">
+    <link rel="stylesheet" href="stylesheets/style.css">
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+
+    <title> Data Visualization project</title>
+
+
+</head>
+
+<body>
+
+
+    <div class="h1">
+        <b>London's Cholera Outbreak Visualization Map</b>
+    </div>
+    <div class="h2">
+        <div id="svgdiv">
+
+            <svg width="100%" height="500" style="border: solid 2px #cccccc">
+                <text id='label' x='900' y='20' style="font-weight: bold; ">Map of London</text>
+				<text id='label' x='100' y='20' style="font-size: bold;">Hover over the bar graphs to see death location on map </text>
+				<text id='label' x='560' y='50' fill="purple" style="font-size: small;">Purple circles - Pumps</text>
+				<text id='label' x='560' y='70' fill="blue" style="font-size: small;">Blue circles - Males</text>
+				<text id='label' x='560' y='90' fill="red" style="font-size: small;">Red circles - Females</text>
+				
+				
+				
+                <g id="map"></g>
+            </svg>
+            <div class="footer">
+			        
+                <ul>
+                    <li>
+                        <p><a href="https://pages.github.iu.edu/vimittal/cholera-map-viz/documentation.pdf" target="_blank">Documentation</a> </p>
+                    </li>
+                    <li>
+                        <p><a href="https://www.youtube.com/watch?v=_Ni4I8kHZoA" target="_blank">Video</a> </p>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
+        <script>
+
+
+            var AGE_GROUPS = [
+                "0-10",
+                "11-20",
+                "21-40",
+                "41-60",
+                "61-80",
+                ">80"
+            ];
+
+
+            var SexData = [];
+            //drawing  map
+            d3.json("data/streets.json", function (data) {
+                var street = d3.svg.line()
+                    .x(function (d) { return d.x * 30; })
+                    .y(function (d) { return 570 - d.y * 30; });
+
+                var g = d3.select('#map').append('g').attr("transform", "translate(600,20)")
+		
+                for (var i = 0; i < data.length; i++) {
+                    var line = data[i];
+                    g.append('path')
+                        .style('fill', 'none')
+                        .style('stroke', 'grey')
+                        .style('stroke-width', '3px')
+                        .attr('d', street(line))
+
+                }
+            });
+
+            //plotting pumps on map
+            d3.csv("data/pumps.csv", function (data) {
+                var dots = d3.select('#map').append('g').attr("transform", "translate(600,20)");
+
+                dots.selectAll('circle')
+                    .data(data)
+                    .enter().append('circle')
+                    .style('fill', 'purple')
+                    .attr('r', '6px')
+                    .attr('cx', function (d) { return d.x * 30; })
+                    .attr('cy', function (d) { return 570 - d.y * 30; })
+                    .attr('id', function (d) { return 'dots' + d.id; });
+					
+
+            });
+
+            var deathsByAge = {};
+            var deathsByGender = {};
+
+            var deathByAgeGroup = [0, 0, 0, 0, 0, 0];
+
+            d3.csv("data/deathdays.csv", function (days) {
+
+                d3.csv("data/deaths_age_sex.csv", function (deaths) {
+
+                    for (var index in deaths) {
+           
+                        deathByAgeGroup[deaths[index].age] += 1;
+                    }
+
+                    deathByAgeBarChart(deathByAgeGroup);
+
+                    var j = 0;
+                    for (i = 0; i < days.length; i++) {
+
+                        var Day = days[i].date;
+                        var Died = days[i].deaths;
+
+                        for (k = 0; k < Died; k++) {
+                            deaths[j].date = Day;
+                            j++;
+
+                        }
+
+                    }
+
+                    //ploting male and females circles on map
+                    var dots = d3.select('#map').append('g').attr("transform", "translate(600,20)");
+
+                    var cValue = function (d) { return d["gender"]; },
+                        color = d3.scale.linear().domain([1, length])
+                            .interpolate(d3.interpolateHcl)
+                            .range([d3.rgb("red"), d3.rgb('blue')]);
+
+
+                    dots.selectAll('circle')
+                        .data(deaths)
+                        .enter().append('circle')
+                        .attr('r', '1.5px')
+                        .attr('cx', function (d) { return d.x * 30; })
+                        .attr('cy', function (d) { return 570 - d.y * 30; })
+                        .attr('id', function (d) { return 'dots' + d.id; })
+                        .attr('class', function (d) { return 'dot' + d.date + " age_group_" + d.age + " gender_" + d.gender; })
+                        .style("fill", function (d) { return color(cValue(d)); })
+
+
+
+
+
+                    //barchart for death by days
+                    var width = 430,
+                        height = 190;
+
+                    var deathNumbers = d3.format("");
+
+                    // defining the x scale with one month range
+                    var mindate = new Date(1854, 8, 29), 
+                        maxdate = new Date(1854, 9, 29);
+
+                    var padding = 100;
+
+                    var xScale = d3.time.scale()
+                        .domain([mindate, maxdate]) 
+                        .range([0, width]);   
+
+                    var x = d3.scale.ordinal()
+                        .rangeRoundBands([0, width], .1);
+
+                    var y = d3.scale.linear()
+                        .range([height, 0])
+                        .domain([0, 150])
+
+                    // defining the y axis
+                    var xAxis = d3.svg.axis()
+                        .orient("bottom")
+                        .scale(xScale)
+                        .ticks(d3.time.days, 2);
+                 
+
+                    var yAxis = d3.svg.axis()
+                        .scale(y)
+                        .orient("left")
+                        .tickFormat(deathNumbers);
+
+                    var svg = d3.select("#map")
+                        .append("g")
+                        .attr("class", "bar_chart_group")
+                        .attr("width", 540)
+                        .attr("height", 250)
+                        .attr("transform", "translate(90,30)")
+						
+
+                    x.domain(days.map(function (d) { return d.date; }));
+
+                    svg.append("g")
+                        .attr("class", "axis xaxis")  
+                        .attr("transform", "translate(0," + height + ")")
+                        .call(xAxis)
+                        .append("text")
+                   
+                        .attr("x", -90)
+                        .attr("y", -50)
+                        .attr("dy", ".71em")
+                  
+
+                    svg.selectAll(".xaxis text")
+                        .attr("transform", function (d) {
+                          
+                            return "translate(" + this.getBBox().height * -2 + "," + this.getBBox().height + ")rotate(-50)";
+                        });
+
+                    svg.append("g")
+                        .attr("class", "y axis")
+                        .call(yAxis)
+                        .append("text")
+                        .attr("transform", "rotate(-90)")
+                        .attr("x", -30)
+                        .attr("y", -50)
+                        .attr("dy", ".71em")
+                        .style("text-anchor", "end")
+                        .text("Number of Deaths");
+                        
+                    svg.selectAll(".bar1")
+                        .data(days)
+                        .enter().append("rect")
+                        .attr("class", "bar1")
+						
+                        .attr("x", function (d) { return x(d.date); })
+                        .attr("width", x.rangeBand())
+                        .attr("y", function (d) { return y(d.deaths); })
+                        .attr("height", function (d) { return height - y(d.deaths); })
+                        .attr('id', function (d) { return 'bar1' + d.date; })
+                        
+                        .on('mouseover', function (d) {
+                        
+                            d3.selectAll('.' + 'dot' + d.date)
+                                .style("fill", function (d) { return color(cValue(d)); })
+                                .attr('r', '8px')
+
+
+                        })
+                        .on('mouseout', function (d) {
+                            d3.selectAll('.' + 'dot' + d.date)
+                                .style("fill", function (d) { return color(cValue(d)); })
+                                .attr('r', '1.5px')
+
+
+                        })
+
+                });
+
+
+                function type(d) {
+                    d.deaths = +d.deaths;
+                    return d;
+                }
+            });
+
+
+            function deathByAgeBarChart(deathByAgeGroup) {
+
+                var height = 250,
+                    width = 700,
+                    w = 570,
+                    h = 150;
+
+                var dataset = [];
+
+
+                for (var ind in AGE_GROUPS) {
+                    // console.log("LOOK", AGE_GROUPS[ind], deathByAgeGroup["__" + AGE_GROUPS[ind]]);
+                    // dataset.push({ "index": ind, "category": AGE_GROUPS[ind], "count": deathByAgeGroup[AGE_GROUPS[ind]] });
+                    dataset.push({ "index": ind, "category": AGE_GROUPS[ind], "count": deathByAgeGroup[ind] });
+                }
+
+                console.log("LOOK2", deathByAgeGroup, dataset);
+
+
+                var svg = d3.select('#map')
+                    .append('g')
+                    .attr("transform", "translate(" + 10 + "," + 250 + ")")
+                    .attr("width", '100%')
+                    .attr("height", '100%')
+                    .attr("viewBox", "0 0 " + width + " " + height)
+                    .attr("preserveAspectRatio", "xMinYMin meet")
+                    .append("g")
+                    .attr("transform",
+                        "translate(80,50)");
+              
+
+                svg.append("text")
+                    .attr("x", 105)
+                    .attr("y", -20)
+                    .attr("id", "deaths_per_age_group")
+                    .text("Days(2-days interval)")
+                    .style("font-size", "15px")
+                    .style("font-weight", "bold");
+              
+
+                var x = d3.scale.ordinal().rangeRoundBands([0, w], .2, .02);
+                var xAxis = d3.svg.axis()
+                    .scale(x)
+                    .orient("bottom")
+                    .tickSize(0)
+                    .tickPadding(5);
+
+                x.domain(dataset.map((d) => d.category));
+
+                // X Axis Label
+                svg.append("text")
+                    .attr("class", "xlabel")
+                    .attr("text-anchor", "end")
+                    .attr("x", 200)
+                    .attr("y", 190)
+                    .text("Age Groups")
+                    .style("font-size", "15px")
+					.style("font-weight", "bold");
+
+                svg.append("g")
+                    .attr("class", "axis")
+                    .attr("transform", "translate(0," + h + ")")
+                    .call(xAxis)
+                    .selectAll("text")
+                    .style("text-anchor", "middle");
+
+                var y = d3.scale.linear().range([h, 0]);
+                var yAxis = d3.svg.axis()
+                    .scale(y)
+                    .orient("left")
+                    .ticks(6);
+
+                y.domain([0, d3.max(dataset, (d) => d.count) + 50]);
+
+
+                // Y Axis Label
+                svg.append("text")
+                    .attr("class", "ylabel")
+                    .attr("text-anchor", "end")
+                    .attr("x", 10)
+                    .attr("y", 100)
+                    .text("Number of Deaths")
+                    .attr("transform", "translate(-145, 35) rotate(-90)")
+                    .style("font-size", "15px")
+					.style("font-weight", "bold");
+
+                svg.append("g")
+                    .attr("class", "axis")
+                    .call(yAxis)
+                    .selectAll("line")
+                    .attr("x2", w)
+
+                svg.selectAll('rect')
+                    .data(dataset)
+                    .enter()
+                    .append('rect')
+                    .attr('width', (d, i) => {
+                        return x.rangeBand();
+                    })
+                    .attr('height', (d, i) => {
+                        console.log(h, d, y(d.count));
+                        return h - y(d.count);
+                    })
+                    .attr('x', (d, i) => {
+                        return x(d.category);
+                    })
+                    .attr('y', (d, i) => {
+                        return y(d.count);
+                    })
+                    .attr('fill', 'purple')
+                    .on("mouseover", (d) => {
+                        d3.selectAll(".age_group_" + d.index)
+                            .attr("r", 8);
+                    })
+                    .on("mouseout", (d) => {
+                        d3.selectAll(".age_group_" + d.index)
+                            .attr("r", 1.5);
+                    });
+            }
+
+
+        </script>
+
+
+
+</body>
+</body>
+
+</html>

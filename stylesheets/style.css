@@ -1,0 +1,132 @@
+.h1 {
+    border: groove;
+    border-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    margin: auto;
+    width:inherit;
+    padding: 20px;
+	font-size: 20px;
+    text-align:center;
+    font-variant:inherit;
+    color:whitesmoke;
+    background-color: purple;
+    font-family: sans-serif;
+
+  }
+
+ .h2 {
+
+    border: groove;
+    border-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    margin: auto;
+    width:inherit;
+    padding: 20px;
+	font-size: 20px;
+    text-align:center;
+    font-variant:inherit;
+    color:whitesmoke;
+    font-family: sans-serif;
+}
+
+.footer {
+	border: groove;
+    border-width: 1px;
+    border-left-width: 1px;
+    border-right-width: 1px;
+    margin: auto;
+    width:inherit;
+    padding: 10px;
+	font-size: 25px;
+    text-align:left;
+    background-color: silver;
+    grid-area: footer;
+
+}
+
+
+
+.main {
+    grid-area: main;
+    background-color: #FAFAFB;
+}
+.main h3 {
+    padding-bottom: 16px;
+    padding-top: 10px;
+    color: #63ACBE;
+}
+
+
+
+.header, .footer {
+    display: block;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    /*background-color: #f3f2ef;*/
+}
+
+#bar-chart
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #414141;
+    shape-rendering: crispEdges;
+}
+
+.bar1 {
+   
+    fill: #0080ff;
+}
+
+.bar1:hover {
+    
+    fill: purple ;
+}
+
+.x.axis path {
+    display: none;
+}
+
+.d3-tip {
+    line-height: 1;
+    font-weight: bold;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border-radius: 2px;
+}
+
+.d3-tip:after {
+    box-sizing: border-box;
+    display: inline;
+    font-size: 10px;
+    width: 100%;
+    line-height: 1;
+    color: rgba(0, 0, 0, 0.8);
+    position: absolute;
+    text-align: center;
+}
+
+
+.d3-tip.n:after {
+    margin: -1px 0 0 0;
+    top: 100%;
+    left: 0;
+}
+
+.axis path, .axis line {
+    fill: none;
+    stroke: black;
+ 
+}
+.tick text {
+    fill: black;
+    font-size: 13px;
+}
+
+
+
